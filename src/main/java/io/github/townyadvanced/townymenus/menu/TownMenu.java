@@ -1,6 +1,8 @@
 package io.github.townyadvanced.townymenus.menu;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import com.palmergames.bukkit.towny.Towny;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyEconomyHandler;
@@ -49,19 +51,109 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static com.palmergames.bukkit.towny.object.Translatable.of;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public class TownMenu {
+    
+    private static final Pattern DYNAMIC_BG_PATTERN = Pattern.compile("<dynamic_bg(?::(-?\\d+)(?::(-?\\d+))?)?>([\\s\\S]*?)</dynamic_bg>");
+    //private static final int CHAR_SPACING = 1;
+    private static final int CHAR_SPACING = 0;
+    private static int getCharWidth(char c) {
+        // if ("i.:'!|".indexOf(c) != -1) return 2;
+        // if ("l ,;".indexOf(c) != -1) return 3;
+        // if ("t[]f{}".indexOf(c) != -1) return 4;
+        // if ("I kw\"*()".indexOf(c) != -1) return 6;
+        // if ("W@~".indexOf(c) != -1) return 8;
+        // if ("123456789".indexOf(c) != -1) return 4;
+        return 5;
+    }
+
+    private static String processTitle(String title) {
+        Matcher matcher = DYNAMIC_BG_PATTERN.matcher(title);
+        StringBuilder sb = new StringBuilder();
+        
+        while (matcher.find()) {
+            int anchorX = (matcher.group(1) != null) ? Integer.parseInt(matcher.group(1)) : 100;
+            int textOffset = (matcher.group(2) != null) ? Integer.parseInt(matcher.group(2)) : 0;
+            String content = matcher.group(3);
+
+            // Nettoyage pour calcul largeur
+            String cleanText = content.replaceAll("<[^>]*>", "").trim();
+            if (cleanText.isEmpty()) cleanText = "Inconnue";
+
+            int textWidth = 0;
+            for (char c : cleanText.toCharArray()) {
+                textWidth += getCharWidth(c);
+            }
+            if (cleanText.length() > 1) {
+                textWidth += CHAR_SPACING * (cleanText.length() - 1);
+            }
+
+            // --- LOGIQUE DU BANDEAU BLEU (Ton ancien plugin) ---
+            final int OVERLAP = 2;
+            final int LEFT_NET = 6 - OVERLAP; 
+            final int MID_NET = 6 - OVERLAP; 
+            final int RIGHT_NET = 6; 
+
+            int margin = 4;
+            int bgCount = (int) Math.ceil((double)(textWidth + 2 * margin - LEFT_NET) / MID_NET);
+            if (bgCount < 1) bgCount = 1;
+
+            int bgTotalNet = LEFT_NET + bgCount * MID_NET + RIGHT_NET;
+
+            int bgLeft = anchorX - bgTotalNet;
+            int cursorAfterBg = anchorX;
+            int bgCenter = bgLeft + bgTotalNet / 2;
+            int textStart = bgCenter - textWidth / 2 + textOffset;
+            int textEnd = textStart + textWidth;
+
+            StringBuilder builder = new StringBuilder();
+            // 1) Dessiner le BG
+            builder.append("<shift:").append(bgLeft).append(">");
+            builder.append("<font:default><white>");
+            builder.append("<glyph:towny_bg_left><shift:-").append(OVERLAP).append(">");
+            for (int i = 0; i < bgCount; i++) {
+                builder.append("<glyph:towny_bg_mid><shift:-").append(OVERLAP).append(">");
+            }
+            builder.append("<glyph:towny_bg_right>");
+            builder.append("</font>");
+
+            // 2) Placer le texte
+            builder.append("<shift:").append(textStart - cursorAfterBg).append(">");
+            builder.append("<font:minecraft:towny_font><white>").append(content).append("</font>");
+            // 3) Reset curseur
+            builder.append("<shift:").append(-textEnd).append(">");
+
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(builder.toString()));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
     public static MenuInventory createTownMenu(@NotNull Player player) {
         final Resident resident = TownyAPI.getInstance().getResident(player);
         final Town town = resident != null ? resident.getTownOrNull() : null;
         final Locale locale = Localization.localeOrDefault(player);
 
+        String townName = (town != null) ? town.getName() : "Inconnue";
+        
+        // Construction du titre brut
+        String rawTitle = "<shift:-8><glyph:towny_main><dynamic_bg:-39:0>"
+                        + townName 
+                        + "</dynamic_bg>";
+
+        String renderedTitle = processTitle(rawTitle);
+
         return MenuInventory.builder()
                 .rows(6)
-                .title(of("town-menu-title", (town != null ? town.getName() : of("town-menu-no-town"))).component(locale))
+                // Ensuite tu l'utilises dans ton builder
+                .title(MiniMessage.miniMessage().deserialize(renderedTitle))
+                //.title(of("<shift:-8><glyph:towny_main><shift:135><font:oraxen:towny_font><white><bold><dynamic_bg>${town.getName()}</dynamic_bg></font>", (town != null ? town.getName() : of("town-menu-no-town"))).component(locale))
                 .addItem(MenuHelper.backButton().build())
                 .addItem(formatTownInfo(player, town)
                         .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(4)))

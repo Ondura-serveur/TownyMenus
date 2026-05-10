@@ -18,12 +18,18 @@ repositories {
 	maven("https://mvn.wesjd.net/") {
 		mavenContent { includeGroup("net.wesjd") }
 	}
+	maven("https://jitpack.io")
+	maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+
 }
 
 dependencies {
     compileOnly(libs.paper)
     compileOnly(libs.towny)
     implementation(libs.anvilgui)
+	compileOnly("com.github.oraxen:oraxen:1.171.0") {
+        isTransitive = false 
+    }
 }
 
 java.sourceCompatibility = JavaVersion.VERSION_21
