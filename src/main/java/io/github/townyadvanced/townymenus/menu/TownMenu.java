@@ -40,9 +40,12 @@ import io.github.townyadvanced.townymenus.menu.helper.GovernmentMenus;
 import io.github.townyadvanced.townymenus.gui.input.response.InputResponse;
 import io.github.townyadvanced.townymenus.utils.Localization;
 import io.github.townyadvanced.townymenus.utils.Time;
+import io.th0rgal.oraxen.api.OraxenItems;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -90,10 +93,10 @@ public class TownMenu {
             final int OVERLAP = 2;
             final int LEFT_NET = 6 - OVERLAP; 
             final int MID_NET = 6 - OVERLAP; 
-            final int RIGHT_NET = 6; 
+            final int RIGHT_NET = 6 ; 
 
             int margin = 4;
-            int bgCount = (int) Math.ceil((double)(textWidth + 2 * margin - LEFT_NET) / MID_NET);
+            int bgCount = (int) Math.ceil((double)(textWidth + 0 * margin - LEFT_NET) / MID_NET);
             if (bgCount < 1) bgCount = 1;
 
             int bgTotalNet = LEFT_NET + bgCount * MID_NET + RIGHT_NET;
@@ -130,37 +133,47 @@ public class TownMenu {
         final Town town = resident != null ? resident.getTownOrNull() : null;
         final Locale locale = Localization.localeOrDefault(player);
 
-        String townName = (town != null) ? town.getName() : "Inconnue";
-        
+        if (town == null) {
+            // Création du composant cliquable
+            Component commandClickable = Component.text("/town create ")
+                .color(net.kyori.adventure.text.format.NamedTextColor.YELLOW)
+                .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand("/town create "))
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(Component.text("Cliquez pour préparer la commande")));
+            // Envoi du message complet
+            player.sendMessage(Component.text("Vous n'avez pas encore de ville, créez-en une avec ", net.kyori.adventure.text.format.NamedTextColor.RED)
+                .append(commandClickable));
+            
+            return null; 
+        }
 
+        String townName = town.getName();
         String rawTitle = "<shift:-8><glyph:towny_main><dynamic_bg:-39:0>"
                         + townName 
                         + "</dynamic_bg>";
-
         String renderedTitle = processTitle(rawTitle);
+
+        ItemStack emptySlot = OraxenItems.getItemById("empty_slot").build();
+        if (emptySlot == null) emptySlot = new ItemStack(Material.BARRIER);
 
         return MenuInventory.builder()
                 .rows(6)
                 .title(MiniMessage.miniMessage().deserialize(renderedTitle))
                 
-                .addItem(MenuHelper.backButton().build())
+                .addItem(MenuHelper.backButtonTopLeft().build())
                 .addItem(formatTownInfo(player, town)
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(4)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromRight(0)))
                         .build())
-                .addItem(MenuItem.builder(Material.EMERALD_BLOCK)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(of("town-menu-bank").component(locale))
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(1), HorizontalAnchor.fromLeft(3)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(3), HorizontalAnchor.fromLeft(0)))
                         .lore(() -> {
-                            if (town == null)
-                                return of("msg-err-not-part-of-town").component(locale);
-                            else
-                                return of("msg-click-to").append(of("town-menu-bank-subtitle")).component(locale);
+                            return of("msg-click-to").append(of("town-menu-bank-subtitle")).component(locale);
                         })
                         .action(town == null ? ClickAction.NONE : ClickAction.openInventory(() -> formatTownBankMenu(player)))
                         .build())
-                .addItem(MenuItem.builder(Material.GRASS_BLOCK)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(of("town-menu-plots").component(locale))
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(1), HorizontalAnchor.fromRight(3)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(1), HorizontalAnchor.fromRight(0)))
                         .lore(() -> {
                             if (town == null)
                                 return of("msg-err-not-part-of-town").component(locale);
@@ -211,8 +224,8 @@ public class TownMenu {
                                     .build();
                         }))
                         .build())
-                .addItem(MenuItem.builder(Material.RED_BED)
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(1)))
+                .addItem(MenuItem.builder(emptySlot)
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(2), HorizontalAnchor.fromLeft(0)))
                         .name(of("town-menu-spawn").component(locale))
                         .lore(() -> {
                             if (town == null)
@@ -235,9 +248,9 @@ public class TownMenu {
                             player.closeInventory();
                         })))
                         .build())
-                .addItem(MenuItem.builder(Material.ENDER_EYE)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(of("town-menu-online").component(locale))
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(2), HorizontalAnchor.fromLeft(1)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(4), HorizontalAnchor.fromLeft(0)))
                         .lore(() -> {
                             if (town == null)
                                 return of("msg-err-not-part-of-town").component(locale);
@@ -263,7 +276,7 @@ public class TownMenu {
                             return MenuInventory.paginator().addItems(online).title(of("town-menu-online").component(locale)).build();
                         }))
                         .build())
-                .addItem(MenuItem.builder(Material.PLAYER_HEAD)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(of("town-menu-overview").component(locale))
                         .lore(() -> {
                             if (town == null)
@@ -272,11 +285,11 @@ public class TownMenu {
                                 return of("msg-click-to").append(of("town-menu-overview-subtitle")).component(locale);
                         })
                         .action(town == null ? ClickAction.NONE : ClickAction.openInventory(() -> createResidentOverview(player)))
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(2), HorizontalAnchor.fromRight(1)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(2), HorizontalAnchor.fromRight(0)))
                         .build())
-                .addItem(MenuItem.builder(Material.GOLDEN_AXE)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(of("town-menu-management").component(locale))
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromRight(1)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(2), HorizontalAnchor.fromRight(0)))
                         .lore(() -> {
                             if (town == null)
                                 return of("msg-err-not-part-of-town").component(locale);

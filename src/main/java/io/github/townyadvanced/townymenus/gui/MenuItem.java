@@ -1,6 +1,5 @@
 package io.github.townyadvanced.townymenus.gui;
 
-import com.destroystokyo.paper.profile.PlayerProfile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import io.github.townyadvanced.townymenus.gui.action.ClickAction;
@@ -24,7 +23,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 public class MenuItem {
-    public static final NamespacedKey PDC_KEY = Objects.requireNonNull(NamespacedKey.fromString("townymenus:menuitem")); // Hide the might be null message
+    public static final NamespacedKey PDC_KEY = Objects.requireNonNull(NamespacedKey.fromString("townymenus:menuitem"));
     private Slot slot;
     private final ItemStack itemStack;
     private final List<ClickAction> actions = new ArrayList<>(0);
@@ -64,33 +63,18 @@ public class MenuItem {
         this.actions.addAll(actions);
     }
 
+    // --- NOUVELLE MÉTHODE POUR ORAXEN ---
+    public static Builder builder(@NotNull ItemStack itemStack) {
+        return new Builder(itemStack);
+    }
+
     public static Builder builder(@NotNull Material type) {
         return new Builder(type);
     }
 
     public Builder builder() {
-        Builder builder = builder(itemStack.getType())
-                .slot(slot)
-                .size(itemStack.getAmount());
-
-        final ItemMeta meta = itemStack.getItemMeta();
-        if (meta != null) {
-            builder.withGlint(meta.hasEnchants());
-
-			final Component displayName = meta.displayName();
-            if (displayName != null) {
-				builder.name(displayName);
-			}
-
-			final List<Component> lore = meta.lore();
-            if (lore != null) {
-				builder.lore(lore);
-			}
-
-            if (itemStack.getType() == Material.PLAYER_HEAD && meta instanceof SkullMeta skullMeta && skullMeta.getPlayerProfile() instanceof PlayerProfile profile && profile.getId() != null) {
-				builder.skullOwner(profile.getId());
-			}
-        }
+        // Utilise le builder d'ItemStack pour garder le CustomModelData
+        Builder builder = builder(this.itemStack).slot(this.slot);
 
         for (ClickAction clickAction : this.actions)
             builder.action(clickAction);
@@ -100,6 +84,7 @@ public class MenuItem {
 
     public static class Builder {
         private final Material type;
+        private final ItemStack baseItem;
         private Component name = Component.empty();
         private final List<Component> lore = new ArrayList<>(0);
         private int size = 1;
@@ -108,8 +93,23 @@ public class MenuItem {
         private boolean glint;
         private UUID ownerUUID;
 
+        // Constructeur classique (Vanilla)
         private Builder(Material type) {
             this.type = type;
+            this.baseItem = null;
+        }
+
+        // Constructeur pour Oraxen (Garde le clone de l'item)
+        private Builder(@NotNull ItemStack itemStack) {
+            this.type = itemStack.getType();
+            this.baseItem = itemStack.clone();
+            this.size = itemStack.getAmount();
+            
+            ItemMeta meta = itemStack.getItemMeta();
+            if (meta != null) {
+                if (meta.hasDisplayName()) this.name = meta.displayName();
+                if (meta.hasLore()) this.lore.addAll(meta.lore());
+            }
         }
 
         public Builder name(@NotNull Component name) {
@@ -155,23 +155,21 @@ public class MenuItem {
         public Builder lore(@NotNull Component lore) {
             if (!lore.equals(Component.empty()))
                 this.lore.add(lore.decoration(TextDecoration.ITALIC, false));
-
             return this;
         }
 
         @SuppressWarnings("unchecked")
         public Builder lore(@NotNull Supplier<Object> supplier) {
             Object object = supplier.get();
-
             if (object instanceof Component component)
                 return this.lore(component);
             else if (object instanceof List<?> list)
                 return this.lore((List<Component>) list);
-
             throw new IllegalArgumentException("Invalid lore class type: " + object.getClass().getName());
         }
 
         public Builder lore(@NotNull List<Component> lore) {
+            this.lore.clear(); // On nettoie si on passe une liste complète
             lore.forEach(this::lore);
             return this;
         }
@@ -182,14 +180,22 @@ public class MenuItem {
         }
 
         public MenuItem build() {
-            ItemStack itemStack = new ItemStack(type, size);
+            // Si on a un baseItem (Oraxen), on l'utilise, sinon on crée un nouveau
+            ItemStack itemStack = (baseItem != null) ? baseItem.clone() : new ItemStack(type, size);
+            itemStack.setAmount(size);
 
             ItemMeta meta = itemStack.getItemMeta();
             if (meta != null) {
                 meta.getPersistentDataContainer().set(PDC_KEY, PersistentDataType.BYTE, (byte) 1);
 
-				meta.displayName(this.name);
-				meta.lore(lore);
+                // On n'applique que si ce n'est pas vide (pour garder le nom Oraxen par défaut si besoin)
+                if (this.name != null && !this.name.equals(Component.empty())) {
+                    meta.displayName(this.name);
+                }
+                
+                if (!this.lore.isEmpty()) {
+                    meta.lore(this.lore);
+                }
 
                 if (meta instanceof SkullMeta skullMeta && this.ownerUUID != null)
                     skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(this.ownerUUID));
@@ -204,7 +210,6 @@ public class MenuItem {
 
             MenuItem item = new MenuItem(itemStack, slot);
             item.addActions(this.actions);
-
             return item;
         }
     }

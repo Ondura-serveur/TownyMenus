@@ -23,6 +23,10 @@ public class SlotAnchor implements Slot {
         return anchor(VerticalAnchor.fromBottom(0), HorizontalAnchor.fromRight(0));
     }
 
+    public static SlotAnchor topLeft() {
+        return anchor(VerticalAnchor.fromTop(0), HorizontalAnchor.fromLeft(0));
+    }
+
     @Override
     public int resolve(final int inventorySize) {
         return verticalAnchor.resolveY(inventorySize) + horizontalAnchor.offset();
