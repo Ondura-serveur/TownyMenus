@@ -250,9 +250,7 @@ public class TownMenu {
                         .name(of("town-menu-online").component(locale))
                         .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(4), HorizontalAnchor.fromLeft(0)))
                         .lore(() -> {
-                            if (town == null)
-                                return of("msg-err-not-part-of-town").component(locale);
-                            else if (!player.hasPermission(PermissionNodes.TOWNY_COMMAND_TOWN_ONLINE.getNode()))
+                            if (!player.hasPermission(PermissionNodes.TOWNY_COMMAND_TOWN_ONLINE.getNode()))
                                 return of("msg-no-permission-to").append(of("town-menu-online-subtitle")).component(locale);
                             else
                                 return of("msg-click-to").append(of("town-menu-online-subtitle")).component(locale);
