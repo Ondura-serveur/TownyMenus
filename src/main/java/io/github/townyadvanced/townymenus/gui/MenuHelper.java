@@ -7,19 +7,37 @@ import io.github.townyadvanced.townymenus.gui.action.ClickAction;
 import io.github.townyadvanced.townymenus.gui.slot.anchor.HorizontalAnchor;
 import io.github.townyadvanced.townymenus.gui.slot.anchor.SlotAnchor;
 import io.github.townyadvanced.townymenus.gui.slot.anchor.VerticalAnchor;
+import io.th0rgal.oraxen.api.OraxenItems;
+
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 
 public class MenuHelper {
     /**
      * @return A new back button item builder, without a specific slot.
      */
-    public static MenuItem.Builder backButton() {
+    public static MenuItem.Builder backButtonTopLeft() {
+        ItemStack emptySlot = OraxenItems.getItemById("empty_slot").build();
+        if (emptySlot == null) emptySlot = new ItemStack(Material.BARRIER);
+        return MenuItem.builder(emptySlot)
+                .name(Component.text("Retour", NamedTextColor.GREEN))
+                .lore(Component.text("Cliquez pour revenir à l'écran precedant.", NamedTextColor.GRAY))
+                .slot(SlotAnchor.topLeft())
+                .action(ClickAction.back());
+    }
+    //méthode de base (barrière en bas à gauche) mais nommée plus explicitement
+    public static MenuItem.Builder backButtonBottomRight() {
         return MenuItem.builder(Material.BARRIER)
-                .name(Component.text("Back", NamedTextColor.GREEN))
-                .lore(Component.text("Click to go back to the previous screen.", NamedTextColor.GRAY))
+                .name(Component.text("Retour", NamedTextColor.GREEN))
+                .lore(Component.text("Cliquez pour revenir à l'écran précédent.", NamedTextColor.GRAY))
                 .slot(SlotAnchor.bottomRight())
                 .action(ClickAction.back());
     }
+    // L'alias : le nom original de la fonction dans le code source
+    public static MenuItem.Builder backButton() {
+        return backButtonBottomRight();
+    }
+
 
     public static int normalizeSize(int size) {
         return (int) Math.min(Math.ceil(size / 9d) * 9, 54);

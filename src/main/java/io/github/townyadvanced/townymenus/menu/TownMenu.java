@@ -40,9 +40,12 @@ import io.github.townyadvanced.townymenus.menu.helper.GovernmentMenus;
 import io.github.townyadvanced.townymenus.gui.input.response.InputResponse;
 import io.github.townyadvanced.townymenus.utils.Localization;
 import io.github.townyadvanced.townymenus.utils.Time;
+import io.th0rgal.oraxen.api.OraxenItems;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -61,15 +64,9 @@ import static net.kyori.adventure.text.format.NamedTextColor.*;
 public class TownMenu {
     
     private static final Pattern DYNAMIC_BG_PATTERN = Pattern.compile("<dynamic_bg(?::(-?\\d+)(?::(-?\\d+))?)?>([\\s\\S]*?)</dynamic_bg>");
-    //private static final int CHAR_SPACING = 1;
+
     private static final int CHAR_SPACING = 0;
     private static int getCharWidth(char c) {
-        // if ("i.:'!|".indexOf(c) != -1) return 2;
-        // if ("l ,;".indexOf(c) != -1) return 3;
-        // if ("t[]f{}".indexOf(c) != -1) return 4;
-        // if ("I kw\"*()".indexOf(c) != -1) return 6;
-        // if ("W@~".indexOf(c) != -1) return 8;
-        // if ("123456789".indexOf(c) != -1) return 4;
         return 5;
     }
 
@@ -82,7 +79,6 @@ public class TownMenu {
             int textOffset = (matcher.group(2) != null) ? Integer.parseInt(matcher.group(2)) : 0;
             String content = matcher.group(3);
 
-            // Nettoyage pour calcul largeur
             String cleanText = content.replaceAll("<[^>]*>", "").trim();
             if (cleanText.isEmpty()) cleanText = "Inconnue";
 
@@ -94,17 +90,16 @@ public class TownMenu {
                 textWidth += CHAR_SPACING * (cleanText.length() - 1);
             }
 
-            // --- LOGIQUE DU BANDEAU BLEU (Ton ancien plugin) ---
             final int OVERLAP = 2;
             final int LEFT_NET = 6 - OVERLAP; 
             final int MID_NET = 6 - OVERLAP; 
-            final int RIGHT_NET = 6; 
+            final int RIGHT_NET = 6 - OVERLAP; 
 
             int margin = 4;
-            int bgCount = (int) Math.ceil((double)(textWidth + 2 * margin - LEFT_NET) / MID_NET);
+            int bgCount = (int) Math.ceil((double)(textWidth + 0 * margin - LEFT_NET) / MID_NET);
             if (bgCount < 1) bgCount = 1;
 
-            int bgTotalNet = LEFT_NET + bgCount * MID_NET + RIGHT_NET;
+            int bgTotalNet = LEFT_NET + bgCount * MID_NET + (bgCount*OVERLAP) + RIGHT_NET;
 
             int bgLeft = anchorX - bgTotalNet;
             int cursorAfterBg = anchorX;
@@ -113,7 +108,6 @@ public class TownMenu {
             int textEnd = textStart + textWidth;
 
             StringBuilder builder = new StringBuilder();
-            // 1) Dessiner le BG
             builder.append("<shift:").append(bgLeft).append(">");
             builder.append("<font:default><white>");
             builder.append("<glyph:towny_bg_left><shift:-").append(OVERLAP).append(">");
@@ -123,10 +117,9 @@ public class TownMenu {
             builder.append("<glyph:towny_bg_right>");
             builder.append("</font>");
 
-            // 2) Placer le texte
             builder.append("<shift:").append(textStart - cursorAfterBg).append(">");
             builder.append("<font:minecraft:towny_font><white>").append(content).append("</font>");
-            // 3) Reset curseur
+
             builder.append("<shift:").append(-textEnd).append(">");
 
             matcher.appendReplacement(sb, Matcher.quoteReplacement(builder.toString()));
@@ -140,38 +133,47 @@ public class TownMenu {
         final Town town = resident != null ? resident.getTownOrNull() : null;
         final Locale locale = Localization.localeOrDefault(player);
 
-        String townName = (town != null) ? town.getName() : "Inconnue";
-        
-        // Construction du titre brut
+        if (town == null) {
+            // Création du composant cliquable
+            Component commandClickable = Component.text("/town create ")
+                .color(net.kyori.adventure.text.format.NamedTextColor.YELLOW)
+                .clickEvent(net.kyori.adventure.text.event.ClickEvent.suggestCommand("/town create "))
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(Component.text("Cliquez pour préparer la commande")));
+            // Envoi du message complet
+            player.sendMessage(Component.text("Vous n'avez pas encore de ville, créez-en une avec ", net.kyori.adventure.text.format.NamedTextColor.RED)
+                .append(commandClickable));
+            
+            return null; 
+        }
+
+        String townName = town.getName();
         String rawTitle = "<shift:-8><glyph:towny_main><dynamic_bg:-39:0>"
                         + townName 
                         + "</dynamic_bg>";
-
         String renderedTitle = processTitle(rawTitle);
+
+        ItemStack emptySlot = OraxenItems.getItemById("empty_slot").build();
+        if (emptySlot == null) emptySlot = new ItemStack(Material.BARRIER);
 
         return MenuInventory.builder()
                 .rows(6)
-                // Ensuite tu l'utilises dans ton builder
                 .title(MiniMessage.miniMessage().deserialize(renderedTitle))
-                //.title(of("<shift:-8><glyph:towny_main><shift:135><font:oraxen:towny_font><white><bold><dynamic_bg>${town.getName()}</dynamic_bg></font>", (town != null ? town.getName() : of("town-menu-no-town"))).component(locale))
-                .addItem(MenuHelper.backButton().build())
+                
+                .addItem(MenuHelper.backButtonTopLeft().build())
                 .addItem(formatTownInfo(player, town)
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(4)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromRight(0)))
                         .build())
-                .addItem(MenuItem.builder(Material.EMERALD_BLOCK)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(of("town-menu-bank").component(locale))
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(1), HorizontalAnchor.fromLeft(3)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(3), HorizontalAnchor.fromLeft(0)))
                         .lore(() -> {
-                            if (town == null)
-                                return of("msg-err-not-part-of-town").component(locale);
-                            else
-                                return of("msg-click-to").append(of("town-menu-bank-subtitle")).component(locale);
+                            return of("msg-click-to").append(of("town-menu-bank-subtitle")).component(locale);
                         })
                         .action(town == null ? ClickAction.NONE : ClickAction.openInventory(() -> formatTownBankMenu(player)))
                         .build())
-                .addItem(MenuItem.builder(Material.GRASS_BLOCK)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(of("town-menu-plots").component(locale))
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(1), HorizontalAnchor.fromRight(3)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(1), HorizontalAnchor.fromRight(0)))
                         .lore(() -> {
                             if (town == null)
                                 return of("msg-err-not-part-of-town").component(locale);
@@ -222,8 +224,8 @@ public class TownMenu {
                                     .build();
                         }))
                         .build())
-                .addItem(MenuItem.builder(Material.RED_BED)
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(1)))
+                .addItem(MenuItem.builder(emptySlot)
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(2), HorizontalAnchor.fromLeft(0)))
                         .name(of("town-menu-spawn").component(locale))
                         .lore(() -> {
                             if (town == null)
@@ -246,9 +248,9 @@ public class TownMenu {
                             player.closeInventory();
                         })))
                         .build())
-                .addItem(MenuItem.builder(Material.ENDER_EYE)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(of("town-menu-online").component(locale))
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(2), HorizontalAnchor.fromLeft(1)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(4), HorizontalAnchor.fromLeft(0)))
                         .lore(() -> {
                             if (town == null)
                                 return of("msg-err-not-part-of-town").component(locale);
@@ -274,7 +276,7 @@ public class TownMenu {
                             return MenuInventory.paginator().addItems(online).title(of("town-menu-online").component(locale)).build();
                         }))
                         .build())
-                .addItem(MenuItem.builder(Material.PLAYER_HEAD)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(of("town-menu-overview").component(locale))
                         .lore(() -> {
                             if (town == null)
@@ -283,11 +285,11 @@ public class TownMenu {
                                 return of("msg-click-to").append(of("town-menu-overview-subtitle")).component(locale);
                         })
                         .action(town == null ? ClickAction.NONE : ClickAction.openInventory(() -> createResidentOverview(player)))
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(2), HorizontalAnchor.fromRight(1)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(2), HorizontalAnchor.fromRight(0)))
                         .build())
-                .addItem(MenuItem.builder(Material.GOLDEN_AXE)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(of("town-menu-management").component(locale))
-                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromRight(1)))
+                        .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(2), HorizontalAnchor.fromRight(0)))
                         .lore(() -> {
                             if (town == null)
                                 return of("msg-err-not-part-of-town").component(locale);
