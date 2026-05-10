@@ -3,6 +3,7 @@ package io.github.townyadvanced.townymenus.gui;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import io.github.townyadvanced.townymenus.gui.action.ClickAction;
 import io.github.townyadvanced.townymenus.gui.slot.anchor.HorizontalAnchor;
 import io.github.townyadvanced.townymenus.gui.slot.anchor.SlotAnchor;
@@ -44,16 +45,18 @@ public class MenuHelper {
     }
 
     public static MenuInventory createConfirmation(Component warningMessage, ClickAction confirmAction, ClickAction cancelAction) {
+        ItemStack emptySlot = OraxenItems.getItemById("empty_slot").build();
+        if (emptySlot == null) emptySlot = new ItemStack(Material.BARRIER);
         return MenuInventory.builder()
                 .size(27)
-                .title(Component.text("Do you you want to continue?"))
-                .addItem(MenuItem.builder(Material.GREEN_STAINED_GLASS)
+                .title(MiniMessage.miniMessage().deserialize("<shift:-8><glyph:towny_continuer>"))
+                .addItem(MenuItem.builder(emptySlot)
                         .name(Component.text("Confirm", NamedTextColor.DARK_GREEN, TextDecoration.BOLD))
                         .lore(warningMessage)
                         .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(2)))
                         .action(confirmAction)
                         .build())
-                .addItem(MenuItem.builder(Material.RED_STAINED_GLASS)
+                .addItem(MenuItem.builder(emptySlot)
                         .name(Component.text("Cancel", NamedTextColor.DARK_RED, TextDecoration.BOLD))
                         .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromRight(2)))
                         .action(cancelAction)
