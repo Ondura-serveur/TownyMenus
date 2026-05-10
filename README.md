@@ -1,3 +1,14 @@
+Pousser tous les changements sur la branche dev.
+Forker ce dépot pour travailler dessus
+Ecrire des commits explicites et clairs
+Ecrire du code lisible
+Documenter son code
+Faire un pull request propre
+LA BRANCHE MAIN SERT UNIQUEMENT A FUSIONNER LES MODIFICATIONS ET MAJ OFFICIELLES DE TOWNY AVEC LES NOTRES SUR "dev"
+La branche de production est prod.
+
+
+
 [Github](https://github.com/TownyAdvanced/TownyMenus) | [Discord](https://discord.gg/gnpVs5m)
 
 <!-- modrinth_exclude.start -->
