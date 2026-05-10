@@ -93,13 +93,13 @@ public class TownMenu {
             final int OVERLAP = 2;
             final int LEFT_NET = 6 - OVERLAP; 
             final int MID_NET = 6 - OVERLAP; 
-            final int RIGHT_NET = 6 ; 
+            final int RIGHT_NET = 6 - OVERLAP; 
 
             int margin = 4;
             int bgCount = (int) Math.ceil((double)(textWidth + 0 * margin - LEFT_NET) / MID_NET);
             if (bgCount < 1) bgCount = 1;
 
-            int bgTotalNet = LEFT_NET + bgCount * MID_NET + RIGHT_NET;
+            int bgTotalNet = LEFT_NET + bgCount * MID_NET + (bgCount*OVERLAP) + RIGHT_NET;
 
             int bgLeft = anchorX - bgTotalNet;
             int cursorAfterBg = anchorX;
