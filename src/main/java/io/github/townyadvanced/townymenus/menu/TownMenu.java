@@ -61,15 +61,9 @@ import static net.kyori.adventure.text.format.NamedTextColor.*;
 public class TownMenu {
     
     private static final Pattern DYNAMIC_BG_PATTERN = Pattern.compile("<dynamic_bg(?::(-?\\d+)(?::(-?\\d+))?)?>([\\s\\S]*?)</dynamic_bg>");
-    //private static final int CHAR_SPACING = 1;
+
     private static final int CHAR_SPACING = 0;
     private static int getCharWidth(char c) {
-        // if ("i.:'!|".indexOf(c) != -1) return 2;
-        // if ("l ,;".indexOf(c) != -1) return 3;
-        // if ("t[]f{}".indexOf(c) != -1) return 4;
-        // if ("I kw\"*()".indexOf(c) != -1) return 6;
-        // if ("W@~".indexOf(c) != -1) return 8;
-        // if ("123456789".indexOf(c) != -1) return 4;
         return 5;
     }
 
@@ -82,7 +76,6 @@ public class TownMenu {
             int textOffset = (matcher.group(2) != null) ? Integer.parseInt(matcher.group(2)) : 0;
             String content = matcher.group(3);
 
-            // Nettoyage pour calcul largeur
             String cleanText = content.replaceAll("<[^>]*>", "").trim();
             if (cleanText.isEmpty()) cleanText = "Inconnue";
 
@@ -94,7 +87,6 @@ public class TownMenu {
                 textWidth += CHAR_SPACING * (cleanText.length() - 1);
             }
 
-            // --- LOGIQUE DU BANDEAU BLEU (Ton ancien plugin) ---
             final int OVERLAP = 2;
             final int LEFT_NET = 6 - OVERLAP; 
             final int MID_NET = 6 - OVERLAP; 
@@ -113,7 +105,6 @@ public class TownMenu {
             int textEnd = textStart + textWidth;
 
             StringBuilder builder = new StringBuilder();
-            // 1) Dessiner le BG
             builder.append("<shift:").append(bgLeft).append(">");
             builder.append("<font:default><white>");
             builder.append("<glyph:towny_bg_left><shift:-").append(OVERLAP).append(">");
@@ -123,10 +114,9 @@ public class TownMenu {
             builder.append("<glyph:towny_bg_right>");
             builder.append("</font>");
 
-            // 2) Placer le texte
             builder.append("<shift:").append(textStart - cursorAfterBg).append(">");
             builder.append("<font:minecraft:towny_font><white>").append(content).append("</font>");
-            // 3) Reset curseur
+
             builder.append("<shift:").append(-textEnd).append(">");
 
             matcher.appendReplacement(sb, Matcher.quoteReplacement(builder.toString()));
@@ -142,7 +132,7 @@ public class TownMenu {
 
         String townName = (town != null) ? town.getName() : "Inconnue";
         
-        // Construction du titre brut
+
         String rawTitle = "<shift:-8><glyph:towny_main><dynamic_bg:-39:0>"
                         + townName 
                         + "</dynamic_bg>";
@@ -151,9 +141,8 @@ public class TownMenu {
 
         return MenuInventory.builder()
                 .rows(6)
-                // Ensuite tu l'utilises dans ton builder
                 .title(MiniMessage.miniMessage().deserialize(renderedTitle))
-                //.title(of("<shift:-8><glyph:towny_main><shift:135><font:oraxen:towny_font><white><bold><dynamic_bg>${town.getName()}</dynamic_bg></font>", (town != null ? town.getName() : of("town-menu-no-town"))).component(locale))
+                
                 .addItem(MenuHelper.backButton().build())
                 .addItem(formatTownInfo(player, town)
                         .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(4)))
