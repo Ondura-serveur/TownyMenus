@@ -175,9 +175,7 @@ public class TownMenu {
                         .name(of("town-menu-plots").component(locale))
                         .slot(SlotAnchor.anchor(VerticalAnchor.fromBottom(1), HorizontalAnchor.fromRight(0)))
                         .lore(() -> {
-                            if (town == null)
-                                return of("msg-err-not-part-of-town").component(locale);
-                            else if (!player.hasPermission(PermissionNodes.TOWNY_COMMAND_TOWN_PLOTS.getNode()))
+                            if (!player.hasPermission(PermissionNodes.TOWNY_COMMAND_TOWN_PLOTS.getNode()))
                                 return of("msg-no-permission-to").append(of("town-menu-plots-subtitle")).component(locale);
                             else
                                 return of("msg-click-to").append(of("town-menu-plots-subtitle")).component(locale);
