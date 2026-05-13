@@ -67,3 +67,6 @@
     - Using anvils for user input will not work on 1.21.9 until spigot mappings are added back, since AnvilGUI unfortunately still depends on those.
   - Item names and lore now have full support for the full color spectrum through MiniMessage in the language files, rather than being downsampled.
   - Chat-based input prompts now properly automatically cancel in more cases after receiving a successful input.
+0.0.15:
+  - Added support for up to 26.1.x, this is hopefully the final version that specifically needs to add support for new versions due to obfuscation being removed.
+  - Fixed the joined town date in the town resident overview always being your own instead of the resident's.
