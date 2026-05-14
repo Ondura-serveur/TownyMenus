@@ -533,8 +533,8 @@ public class TownMenu {
 
         return MenuInventory.builder()
                 .rows(3)
-                .title(of("town-menu-management").component(locale))
-                .addItem(MenuHelper.backButton().build())
+                .title(MiniMessage.miniMessage().deserialize("<shift:-8><glyph:towny_gestion_ville>"))
+                .addItem(MenuHelper.backButtonTopLeft().build())
                 .addItem(MenuItem.builder(Material.GRASS_BLOCK)
                         .name(of("town-menu-management-town-menu-title").component(locale))
                         .lore(of("msg-click-to").append(of("town-menu-management-town-menu-subtitle")).component(locale))
@@ -564,9 +564,9 @@ public class TownMenu {
         final boolean isPublic = town != null && town.isPublic();
 
         return MenuInventory.builder()
-                .title(of("town-menu-management").component(locale))
+                .title(MiniMessage.miniMessage().deserialize("<shift:-8><glyph:towny_toogle_menu>")) // town-menu-management
                 .rows(4)
-                .addItem(MenuHelper.backButton().build())
+                .addItem(MenuHelper.backButtonTopLeft().build())
                 // Explosion
                 .addItem(GovernmentMenus.createTogglePropertyItem(player, town, Material.TNT, explosionEnabled, "explosion")
                         .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(1)))
@@ -623,9 +623,9 @@ public class TownMenu {
         final Town town = TownyAPI.getInstance().getTown(player);
 
         return MenuInventory.builder()
-                .title(of("town-menu-town-set-title").component(locale))
+                .title(MiniMessage.miniMessage().deserialize("<shift:-8><glyph:towny_menu_parametres_ville>")) // town-menu-management-town-menu-title
                 .rows(3)
-                .addItem(MenuHelper.backButton().build())
+                .addItem(MenuHelper.backButtonTopLeft().build())
                 .addItem(MenuItem.builder(Material.NAME_TAG)
                         .name(of("town-menu-town-set-change-name").component(locale))
                         .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(2)))
@@ -721,9 +721,9 @@ public class TownMenu {
         final Locale locale = Localization.localeOrDefault(player);
 
         final MenuInventory.Builder builder = MenuInventory.builder()
-                .title(of("town-menu-bank").component(locale))
+                .title(MiniMessage.miniMessage().deserialize("<shift:-8><glyph:towny_banque>"))
                 .rows(3)
-                .addItem(MenuHelper.backButton().build())
+                .addItem(MenuHelper.backButtonTopLeft().build())
                 .addItem(MenuItem.builder(Material.EMERALD_BLOCK)
                         .name(of("town-menu-bank-deposit-or-withdraw").component(locale))
                         .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(2)))
@@ -754,7 +754,7 @@ public class TownMenu {
 
         if (town != null && TownyEconomyHandler.isActive()) {
             builder.addItem(formatBankStatus(player, town.getAccount(), true)
-                    .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(0), HorizontalAnchor.fromLeft(4)))
+                    .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(4)))
                     .build());
         }
 

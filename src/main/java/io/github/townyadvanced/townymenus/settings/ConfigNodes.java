@@ -7,7 +7,7 @@ public enum ConfigNodes {
 			"",
 			"# This is the current version. Please do not edit."),
 	LANGUAGE("language",
-			"en_US.yml",
+			"fr_FR.yml",
 			"# The language file you wish to use");
 	
 	private final String Root;
