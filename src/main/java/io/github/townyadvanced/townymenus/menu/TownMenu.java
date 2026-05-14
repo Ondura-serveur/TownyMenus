@@ -324,8 +324,8 @@ public class TownMenu {
 
     public static MenuInventory createResidentOverview(Player player) {
         final Locale locale = Localization.localeOrDefault(player);
-        Resident res = TownyAPI.getInstance().getResident(player);
-        Town town = res != null ? res.getTownOrNull() : null;
+        final Resident playerRes = TownyAPI.getInstance().getResident(player);
+        final Town town = playerRes != null ? playerRes.getTownOrNull() : null;
 
         if (town == null)
             return MenuInventory.paginator().title(of("town-menu-overview").component(locale)).build();
@@ -335,7 +335,7 @@ public class TownMenu {
 
         for (Resident resident : town.getResidents()) {
             builder.addItem(ResidentMenu.formatResidentInfo(resident, player)
-                    .lore(of("town-menu-overview-joined-town", Time.registeredOrAgo(res.getJoinedTownAt(), Translation.getLocale(player))).component(locale))
+                    .lore(of("town-menu-overview-joined-town", Time.registeredOrAgo(resident.getJoinedTownAt(), Translation.getLocale(player))).component(locale))
                     .lore(Component.space())
                     .lore(of("msg-right-click-additional-options").component(locale))
                     .action(ClickAction.rightClick(ClickAction.openInventory(() -> createResidentManagementScreen(player, town, resident))))
