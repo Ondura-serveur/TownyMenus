@@ -24,6 +24,8 @@ import io.github.townyadvanced.townymenus.menu.NationMenu;
 import io.github.townyadvanced.townymenus.menu.TownMenu;
 import io.github.townyadvanced.townymenus.gui.input.response.InputResponse;
 import io.github.townyadvanced.townymenus.utils.Localization;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -85,9 +87,9 @@ public class GovernmentMenus {
         final PermissionNodes root = government instanceof Town ? PermissionNodes.TOWNY_COMMAND_TOWN : PermissionNodes.TOWNY_COMMAND_NATION;
 
         return MenuInventory.builder()
-                .title(of("government-menus-deposit-or-withdraw").component(locale))
+                .title(MiniMessage.miniMessage().deserialize("<shift:-8><glyph:towny_bank_withdraw_or_deposit>"))
                 .rows(3)
-                .addItem(MenuHelper.backButton().build())
+                .addItem(MenuHelper.backButtonTopLeft().build())
                 .addItem(MenuItem.builder(Material.EMERALD)
                         .name(of("government-menus-deposit").component(locale))
                         .slot(SlotAnchor.anchor(VerticalAnchor.fromTop(1), HorizontalAnchor.fromLeft(2)))
